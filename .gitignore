@@ -1,0 +1,70 @@
+# macOS
+.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node / RN / Expo
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.tgz
+
+# iOS
+ios/Pods/
+ios/build/
+ios/DerivedData/
+ios/.xcode.env.local
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Android
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+*.keystore
+!debug.keystore
+
+# EAS / Expo build
+.eas/
+.easignore
+
+# Env / Secrets
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+firebase-adminsdk*.json
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS / Misc
+Thumbs.db
+*.log
+
+# Coverage / Tests
+coverage/
+.nyc_output/
+
+# Temp
+tmp/
+temp/
+
+# OMC / Claude Code transient state (skills are committed; runtime state is not)
+.omc/
+.claude/settings.local.json
+.claude/state/
+.claude/cache/
