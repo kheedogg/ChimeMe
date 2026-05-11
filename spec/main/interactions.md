@@ -16,14 +16,15 @@
 - 카드가 많아지면 세로 스크롤. iOS bounce 활성.
 - Pull-to-refresh로 그룹 목록 재조회.
 
-## 정렬
+## 정렬 (클라이언트 측 — D-12-05)
 - 1차: 새 영상 있는 그룹 우선
-- 2차: 최근 활동 시간 desc
+- 2차: 각 그룹의 최신 post `createdAt` desc (없으면 `groups.createdAt`)
 - (옵션) 사용자가 핀 고정 가능 — 추후
 
-## 새 영상 판정
-- 그룹 멤버 중 본인을 제외한 누군가의 post 중 `unreadVideoCount > 0`이면 새 영상 표시
-- 사용자 진입 시 해당 그룹의 unread 카운트를 0으로 갱신
+## 새 영상 판정 (D-12-05)
+- 클라이언트 계산: 각 그룹의 최신 post `createdAt`이 `memberships.lastReadVideoAt`보다 크면 새 영상 표시
+- 사용자 진입 시 `memberships.lastReadVideoAt = serverTimestamp()` 갱신
+- Firestore 쓰기 fan-out 회피 (5,000 DAU 정각 폭주 안전)
 
 ## 에러 처리
 - 네트워크 오류 → 인라인 배너 + "다시 시도" 버튼

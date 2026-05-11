@@ -30,10 +30,25 @@
   - 구현: `expo-task-manager` + 재시도 정책
 - **카메라 권한 거부 처리**: 설명 화면 + "설정 열기" 버튼으로 시스템 설정 유도
 
-## 미정 / 디자인 TODO
-- 영상 코덱/해상도 (용량 vs 화질) — 우선 720p H.264 가설로 진행
-- 큐 재시도 정책 (지수 백오프?)
-- 업로드 실패 시 사용자 안내 톤
+## 인코딩 표준 (D-12-03, D-12-11 확정)
+- 코덱: **H.264 (AVC)** — `recordAsync({ codec: 'avc1' })`로 강제
+- 해상도: **720p (1280×720)**
+- 프레임레이트: **30fps**
+- 비트레이트: **2~3 Mbps**
+- 컨테이너: **MP4** (`moov` atom 선행)
+- 클립 크기: 약 **1 MB / 3초**
 
-## 후속 작성 필요
-- `ui.md`, `interactions.md`, `data.md`
+## 큐 재시도 정책 (D-12-07 확정)
+- 큐 상태 enum: `pending` / `uploading` / `success` / `failed` / `expired`
+- 지수 백오프: 1s → 2s → 4s → 8s → 16s, **최대 5회**
+- 슬롯 마감 + grace 30초 (D-12-02) 초과 시 자동 `expired` 처리
+- Storage 경로 멱등성: `{groupId}/{slotKey}/{uid}.mp4` 고정 (재시도 시 덮어쓰기)
+- Firestore 문서: `setDoc(deterministicId)` upsert로 중복 방지
+
+## 슬롯 시간 (D-12-01, D-12-02 확정)
+- 슬롯 키: UTC 기반 `YYYYMMDDHH` 저장, 표시만 로컬
+- 업로드 허용 윈도우: 정각 ~ 다음 정각 + **grace 30초**
+- Security Rule에서 `request.time` 기준 검증
+
+## 후속 작성 완료
+- `ui.md` ✓ `interactions.md` ✓ `data.md` ✓
