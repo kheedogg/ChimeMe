@@ -1,5 +1,17 @@
 # group-detail — UI
 
+## 목업
+
+### 활성 시간대 (멤버 전원 업로드 완료)
+![group-detail active slot](../../AppPlanningDoc/pages/groupPage.png)
+
+> 09:00 슬롯, 가족 그룹(엄마·아빠·나) 모두 영상 업로드된 상태. 노란 배경 = 활성 슬롯. "탭하여 소리 켜기" 토스트 1회 노출.
+
+### 미업로드 멤버 포함 슬롯
+![group-detail with empty slot](../../AppPlanningDoc/pages/groupPage2.png)
+
+> 12:00 슬롯, 아빠가 미업로드 상태. 회색 배경 + 카메라 아이콘 + "아직 영상이 없어요" placeholder. 멤버 칩도 화이트 배경으로 차별화.
+
 ## 레이아웃
 
 ### 1. 헤더

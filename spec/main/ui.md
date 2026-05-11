@@ -1,5 +1,11 @@
 # main — UI
 
+## 목업
+
+![main page mockup](../../AppPlanningDoc/pages/mainPage.png)
+
+> 위 목업은 초기 컨셉. 워드마크는 "Chime" → **"ChimeMe"**로 변경 필요 (`spec/main/ui.md §1` 참조).
+
 ## 레이아웃 (위에서 아래로)
 
 ### 1. 앱 헤더
