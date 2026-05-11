@@ -7,16 +7,64 @@
 
 ## 카메라 출력 (로컬 파일)
 - 임시 URI: `file:///var/mobile/.../tmp/capture-{uuid}.mp4` (iOS) 또는 `/data/user/0/.../cache/capture-{uuid}.mp4` (Android)
-- `expo-camera`의 `recordAsync` 옵션:
+- `expo-camera`의 `recordAsync` 옵션 (D-12-03, D-12-11, D-12-13):
   ```javascript
   await cameraRef.recordAsync({
     maxDuration: 3,
-    codec: 'avc1',     // D-12-11: H.264 강제
-    quality: '720p',
+    codec: 'avc1',          // H.264 강제
+    quality: '720p',        // 1280x720
     mute: false,
-    mirror: false,     // 후면 카메라 기본
+    mirror: false,          // 후면 카메라 기본
+    // landscape 전용 — 디바이스 방향 체크는 진입 단계에서 처리
   });
   ```
+
+## 디바이스 방향 잠금 (D-12-13)
+```javascript
+import * as ScreenOrientation from 'expo-screen-orientation';
+
+// 화면 진입 시
+await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+
+// 화면 이탈 시
+await ScreenOrientation.unlockAsync();
+```
+
+## 영상 메타 검증 (Cloud Function — D-12-13)
+업로드 직후 Storage `finalize` 트리거에서 영상 메타 검증:
+```javascript
+exports.onVideoUploaded = onObjectFinalized(async (event) => {
+  const filePath = event.data.name;
+  if (!filePath.match(/^groups\/[^\/]+\/[^\/]+\/[^\/]+\.mp4$/)) return;
+  
+  // ffprobe 또는 ffmpeg로 메타 추출
+  const metadata = await getVideoMetadata(filePath);
+  
+  // D-12-13: landscape 검증 (width > height)
+  if (metadata.width <= metadata.height) {
+    // portrait 영상 → 업로드 거부 (Storage 삭제 + Firestore 문서 삭제)
+    await deleteObject(storageRef(storage, filePath));
+    const [_, gid, slotKey, filename] = filePath.split('/');
+    const uid = filename.replace('.mp4', '');
+    await deleteDoc(doc(db, 'groups', gid, 'posts', `${slotKey}_${uid}`));
+    
+    // 사용자에게 알림
+    await messaging().sendMulticast({
+      tokens: userTokens,
+      notification: {
+        title: 'ChimeMe',
+        body: '영상은 가로 방향으로 촬영해 주세요',
+      },
+      data: { type: 'video_rejected', reason: 'orientation' },
+    });
+    
+    return;
+  }
+  
+  // D-12-03: 해상도/코덱 검증 (옵션)
+  // metadata.codec, metadata.width, metadata.height 확인
+});
+```
 
 ## 업로드 큐 (D-12-07)
 

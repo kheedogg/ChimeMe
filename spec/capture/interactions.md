@@ -5,9 +5,21 @@
 - 진입 즉시:
   1. 카메라/마이크 권한 체크
   2. 현재 시각 vs 슬롯 마감 시각 비교 (D-12-02 grace 30초 적용)
-  3. 권한 OK + 시간 OK → 대기 상태로 진입
-  4. 권한 없음 → 권한 안내 화면
-  5. 슬롯 마감 → 마감 안내 화면
+  3. **디바이스 방향 체크** (D-12-13) — portrait면 회전 안내 화면
+  4. 권한 OK + 시간 OK + landscape → 대기 상태로 진입
+  5. 권한 없음 → 권한 안내 화면
+  6. 슬롯 마감 → 마감 안내 화면
+
+## 디바이스 방향 감지 (D-12-13)
+- `expo-screen-orientation` 사용
+- 진입 시 현재 orientation 확인:
+  - `LANDSCAPE_LEFT` 또는 `LANDSCAPE_RIGHT` → 카메라 화면
+  - `PORTRAIT_UP` 또는 `PORTRAIT_DOWN` → 회전 안내 화면
+- 실시간 회전 감지: `ScreenOrientation.addOrientationChangeListener`
+  - portrait → landscape 회전 시 자동으로 카메라 화면 전환
+  - landscape → portrait 회전 시 자동으로 회전 안내 화면 전환 (촬영 중이면 녹화 중단)
+- 화면 이탈 시 리스너 제거
+- iOS / Android 동일 동작 보장
 
 ## 슬롯 시간 검증
 - 현재 슬롯 시작: `slotStart = toHourSlot(new Date())`
@@ -30,10 +42,12 @@
 
 ### 카운트다운 중
 - `AppState`가 `inactive` 또는 `background`로 변경 시 카운트다운 즉시 취소
+- 디바이스 회전 → portrait 시 카운트다운 즉시 취소 (D-12-13)
 - 포그라운드 복귀 시 대기 상태로 리셋
 
 ### 녹화 중
 - 백그라운드 전환 시 녹화 중단 + URI 폐기
+- **디바이스 회전 → portrait 전환 시 녹화 즉시 중단 + URI 폐기** (D-12-13)
 - 전화 수신 시 (iOS 카메라 세션 자동 중단) → 녹화 중단
 - 포그라운드 복귀 시 미리보기 진입하지 않고 대기 상태로 복귀
 

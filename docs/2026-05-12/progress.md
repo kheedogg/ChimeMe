@@ -108,14 +108,27 @@
 
 ---
 
-## 미해결 / 내일 진행
+## Phase 2 — 신규 5개 화면 작성 완료
 
-### Phase 2 신규 화면 5개 (1일 예상)
-- `spec/report/` — 신고 흐름
-- `spec/group-settings/` — 그룹 관리
-- `spec/blocked-users/` — 차단 사용자 목록
-- `spec/account-delete/` — 계정 삭제 흐름
-- `spec/legal/` — 이용약관 / 개인정보처리방침 표시
+### 신규 작성 (20개 파일)
+| 화면 | overview | ui | interactions | data |
+|---|---|---|---|---|
+| report | ✅ | ✅ | ✅ | ✅ |
+| group-settings | ✅ | ✅ | ✅ | ✅ |
+| blocked-users | ✅ | ✅ | ✅ | ✅ |
+| account-delete | ✅ | ✅ | ✅ | ✅ |
+| legal | ✅ | ✅ | ✅ | ✅ |
+
+전체 화면: **15/15 (60문서)** 완성
+
+### 추가 결정 (사용자 추가 요구)
+- **D-12-13 영상 촬영 방향 — Landscape 전용** (사용자 요구로 추가)
+  - 1280×720 16:9 고정
+  - portrait 미지원 — 디바이스 회전 잠금 + 회전 안내 화면
+  - Cloud Function이 메타 검증으로 portrait 영상 업로드 거부
+  - 영향: capture/* 전체, group-detail/ui.md, chat 영상 인용 카드
+
+## 미해결 / 내일 진행 표시
 
 ### Phase 3 사용자 영역 (병렬)
 - Firebase 프로젝트 2개(dev/prod) 생성 + 서울 리전

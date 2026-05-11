@@ -20,15 +20,19 @@
 
 **완성도**: 10/10 화면 1차 완성 (각 4문서, 총 40개 문서) — 2026-05-12 Phase 1 완료
 
-## 향후 작성 예정 (Phase 2)
+## Phase 2 추가 화면 (2026-05-12 완료)
 
-| 키 | 한글명 | 상태 |
-|---|---|---|
-| `report` | 영상/메시지/사용자 신고 화면 | ⏳ |
-| `group-settings` | 그룹 관리 (멤버 추방, 그룹 해체, 권한) | ⏳ |
-| `blocked-users` | 차단 사용자 목록 | ⏳ |
-| `account-delete` | 계정 삭제 흐름 (소유 그룹 처리) | ⏳ |
-| `legal` | 이용약관 / 개인정보처리방침 | ⏳ |
+| 키 | 한글명 | 상태 | 진입로 |
+|---|---|---|---|
+| [report](./report/overview.md) | 신고 (영상/메시지/사용자) | ✅ 1차 완성 | 콘텐츠 길게 누르기 → 신고하기 |
+| [group-settings](./group-settings/overview.md) | 그룹 관리 (멤버/권한/해체) | ✅ 1차 완성 | group-detail 헤더 ⋮ |
+| [blocked-users](./blocked-users/overview.md) | 차단 사용자 목록 | ✅ 1차 완성 | profile → 차단한 사용자 |
+| [account-delete](./account-delete/overview.md) | 계정 삭제 흐름 (3단계) | ✅ 1차 완성 | profile → 계정 삭제 |
+| [legal](./legal/overview.md) | 이용약관 / 개인정보처리방침 | ✅ 1차 완성 | auth-phone / profile |
+
+**Phase 2 완성도**: 5/5 화면 1차 완성 (각 4문서, 총 20개 문서)
+
+**전체 화면 합계**: 15/15 화면 (60개 문서)
 
 ## 작성 규칙
 
@@ -52,6 +56,7 @@
 | 슬롯 키 timezone | **UTC `YYYYMMDDHH` 저장 / 표시만 로컬** (D-12-01) |
 | 업로드 grace window | 정각 + **30초** (D-12-02) |
 | 영상 인코딩 | **720p H.264 / 30fps / 2~3Mbps / MP4** (D-12-03) |
+| 영상 촬영 방향 | **Landscape 전용** — Portrait 미지원 (D-12-13) |
 | App Check | **Day-1 적용** (DeviceCheck / Play Integrity) (D-12-04) |
 | 안읽음 카운트 | **클라이언트 계산** (`lastReadVideoAt` 기반, fan-out 제거) (D-12-05) |
 | FCM 발송 | 토픽 메시징 + jitter 0~120초 + min instances (D-12-06) |
