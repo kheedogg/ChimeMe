@@ -1,0 +1,201 @@
+// ChimeMe Firestore Security Rules
+// 통합 본 — 각 spec/*/data.md의 Rule을 종합하여 작성
+// 배포: firebase deploy --only firestore:rules
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === Helper functions ===
+
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isOwnUid(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function isGroupMember(gid) {
+      return request.auth.uid in get(/databases/$(database)/documents/groups/$(gid)).data.memberIds;
+    }
+
+    function isGroupOwner(gid) {
+      return request.auth.uid == get(/databases/$(database)/documents/groups/$(gid)).data.ownerId;
+    }
+
+    // === users/{uid} ===
+    // D-12-09: 본인 또는 같은 그룹 멤버만 read. 본인만 update.
+    match /users/{uid} {
+      allow read: if isAuthed()
+        && (isOwnUid(uid)
+            || exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + uid)));
+
+      // 본인 문서 최초 생성 시 — onboarding
+      allow create: if isOwnUid(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.phoneNumber == request.auth.token.phone_number
+        && request.resource.data.displayName.size() >= 1
+        && request.resource.data.displayName.size() <= 20
+        && request.resource.data.agreements.tosVersion != null
+        && request.resource.data.agreements.privacyVersion != null;
+
+      // 본인 문서 갱신 — 전화번호/생년월일 변경 불가
+      allow update: if isOwnUid(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.phoneNumber == resource.data.phoneNumber
+        && request.resource.data.birthDate == resource.data.birthDate;
+
+      allow delete: if false; // Cloud Function 경유
+    }
+
+    // === groups/{gid} ===
+    match /groups/{gid} {
+      allow read: if isAuthed() && request.auth.uid in resource.data.memberIds;
+
+      // 그룹 생성: 본인이 owner이며 memberIds = [본인]
+      allow create: if isAuthed()
+        && request.auth.uid == request.resource.data.ownerId
+        && request.resource.data.memberIds == [request.auth.uid]
+        && request.resource.data.maxMembers == 8
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 30;
+
+      // 그룹 갱신:
+      // - 일반 멤버: memberIds에서 본인 제거(탈퇴)만 허용
+      // - 소유자: 모든 필드 수정 가능 (이름/이모지/멤버 추방)
+      allow update: if isAuthed()
+        && (
+          // 본인 탈퇴
+          (request.auth.uid in resource.data.memberIds
+            && !(request.auth.uid in request.resource.data.memberIds)
+            && request.resource.data.memberIds.size() == resource.data.memberIds.size() - 1)
+          // 소유자 (전체 수정 + 멤버 추방 + maxMembers 검증)
+          || (resource.data.ownerId == request.auth.uid
+              && request.resource.data.maxMembers == 8
+              && request.resource.data.memberIds.size() <= 8)
+        );
+
+      allow delete: if false; // Cloud Function dissolveGroup 경유
+
+      // === groups/{gid}/posts/{postId} === (D-12-01 UTC 슬롯 + D-12-02 grace 30초)
+      match /posts/{postId} {
+        allow read: if isAuthed() && isGroupMember(gid);
+
+        // 영상 업로드: 본인만 + 슬롯 시간 범위 내 + 멱등 키 검증
+        allow create, update: if isAuthed()
+          && request.auth.uid == request.resource.data.authorId
+          && isGroupMember(gid)
+          && request.resource.data.groupId == gid
+          // 멱등 키: postId == "{slotKey}_{uid}"
+          && postId == request.resource.data.hourSlot + '_' + request.auth.uid
+          // 슬롯 시간 범위 검증 (grace 30초)
+          && request.time.toMillis() >= request.resource.data.hourSlotDate.toMillis()
+          && request.time.toMillis() < request.resource.data.hourSlotDate.toMillis()
+              + duration.value(1, 'h').toMillis()
+              + duration.value(30, 's').toMillis();
+
+        // 본인 영상 삭제: 작성 후 7일 내 (Q-12-07)
+        allow delete: if isAuthed()
+          && request.auth.uid == resource.data.authorId
+          && resource.data.createdAt.toMillis() + duration.value(7, 'd').toMillis()
+              > request.time.toMillis();
+      }
+
+      // === groups/{gid}/messages/{msgId} === (D-12-08 채팅 + Q-12-05 5분 삭제)
+      match /messages/{msgId} {
+        allow read: if isAuthed() && isGroupMember(gid);
+
+        // 메시지 발송: 본인만 + 멱등 키 + 길이 제한
+        allow create: if isAuthed()
+          && isGroupMember(gid)
+          && request.resource.data.authorId == request.auth.uid
+          && msgId == request.resource.data.clientMessageId
+          && request.resource.data.content.size() <= 2000;
+
+        // 메시지 삭제 (soft delete): 본인만 + 5분 내
+        allow update: if isAuthed()
+          && request.auth.uid == resource.data.authorId
+          && request.resource.data.deleted == true
+          && request.resource.data.content == null
+          && resource.data.createdAt.toMillis() + duration.value(5, 'm').toMillis()
+              >= request.time.toMillis();
+
+        allow delete: if false; // soft delete만
+      }
+    }
+
+    // === memberships/{uid_gid} ===
+    match /memberships/{compoundKey} {
+      allow read: if isAuthed()
+        && (resource.data.uid == request.auth.uid
+            || isGroupMember(resource.data.groupId));
+
+      allow create: if isAuthed()
+        && request.resource.data.uid == request.auth.uid;
+
+      allow update: if isAuthed()
+        && resource.data.uid == request.auth.uid;
+
+      // 본인 또는 소유자가 삭제 가능
+      allow delete: if isAuthed()
+        && (resource.data.uid == request.auth.uid
+            || isGroupOwner(resource.data.groupId));
+    }
+
+    // === invites/{inviteId} ===
+    match /invites/{inviteId} {
+      allow read: if isAuthed(); // 누구나 초대 정보 조회 가능 (가입 시 검증)
+
+      allow create: if isAuthed()
+        && request.auth.uid == request.resource.data.createdBy
+        && isGroupMember(request.resource.data.groupId);
+
+      allow update: if isAuthed()
+        && isGroupMember(resource.data.groupId);
+
+      allow delete: if false; // Cloud Function 또는 만료 처리만
+    }
+
+    // === blocks/{blockerId_blockedId} ===
+    match /blocks/{compoundKey} {
+      allow read: if isAuthed() && resource.data.blockerId == request.auth.uid;
+
+      allow create: if isAuthed()
+        && request.resource.data.blockerId == request.auth.uid
+        && request.resource.data.blockerId != request.resource.data.blockedId
+        && exists(/databases/$(database)/documents/users/$(request.resource.data.blockedId));
+
+      allow update: if false;
+
+      allow delete: if isAuthed() && resource.data.blockerId == request.auth.uid;
+    }
+
+    // === reports/{reportId} ===
+    match /reports/{reportId} {
+      allow read: if isAuthed() && resource.data.reporterId == request.auth.uid;
+
+      allow create: if isAuthed()
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.targetType in ['video', 'message', 'user']
+        && request.resource.data.reason in ['profanity', 'inappropriate', 'spam', 'violence', 'minor_protection', 'other']
+        && (request.resource.data.description == null
+            || request.resource.data.description.size() <= 500);
+
+      allow update, delete: if false; // 관리자 SDK만
+    }
+
+    // === blockedFromGroups/{uid_gid} === (그룹 강퇴 후 재가입 차단)
+    match /blockedFromGroups/{compoundKey} {
+      allow read: if isAuthed();
+      allow write: if false; // Cloud Function만
+    }
+
+    // === digestCounters/{uid} === (FCM 다이제스트 카운터)
+    match /digestCounters/{uid} {
+      allow read: if isOwnUid(uid);
+      allow write: if false; // Cloud Function만
+    }
+  }
+}

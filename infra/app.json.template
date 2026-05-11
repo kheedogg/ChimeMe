@@ -1,0 +1,112 @@
+{
+  "expo": {
+    "name": "ChimeMe",
+    "slug": "chimeme",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "scheme": "chimeme",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFD54F"
+    },
+    "assetBundlePatterns": ["**/*"],
+
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.chimeme.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "매시간 3초 영상을 촬영하여 그룹과 공유합니다",
+        "NSMicrophoneUsageDescription": "3초 영상에 소리를 함께 녹음합니다",
+        "NSPhotoLibraryUsageDescription": "프로필 사진을 선택하기 위해 사진 라이브러리에 접근합니다",
+        "NSContactsUsageDescription": "그룹 멤버를 초대하기 위해 연락처에 접근합니다",
+        "UIBackgroundModes": ["fetch", "remote-notification"],
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": ["ko", "en"]
+      },
+      "associatedDomains": ["applinks:chimeme.app"],
+      "googleServicesFile": "./infra/GoogleService-Info.plist"
+    },
+
+    "android": {
+      "package": "com.chimeme.mobile",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFD54F"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_CONTACTS",
+        "POST_NOTIFICATIONS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "chimeme.app", "pathPrefix": "/invite/" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
+      "googleServicesFile": "./infra/google-services.json"
+    },
+
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "매시간 3초 영상을 촬영하여 그룹과 공유합니다",
+          "microphonePermission": "3초 영상에 소리를 함께 녹음합니다",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "프로필 사진을 선택하기 위해 사진 라이브러리에 접근합니다"
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "그룹 멤버를 초대하기 위해 연락처에 접근합니다"
+        }
+      ],
+      "expo-secure-store",
+      "expo-task-manager",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/firestore",
+      "@react-native-firebase/storage",
+      "@react-native-firebase/messaging",
+      "@react-native-firebase/app-check"
+    ],
+
+    "experiments": {
+      "typedRoutes": true
+    },
+
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id-here"
+      }
+    },
+
+    "owner": "your-expo-username",
+
+    "updates": {
+      "url": "https://u.expo.dev/your-eas-project-id-here"
+    },
+
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    }
+  }
+}

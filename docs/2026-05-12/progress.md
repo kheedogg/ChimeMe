@@ -128,13 +128,62 @@
   - Cloud Function이 메타 검증으로 portrait 영상 업로드 거부
   - 영향: capture/* 전체, group-detail/ui.md, chat 영상 인용 카드
 
+## Phase 3 — 인프라/계정/법무 가이드 작성 완료
+
+### 산출물
+
+**가이드 (`docs/2026-05-12/`)**
+- `phase3-setup-guide.md` — Firebase / Apple Developer / Play Console / EAS / 도메인 / 법무 전체 셋업 단계별 가이드 + 예상 비용 + 트러블슈팅
+
+**인프라 설정 (`infra/`)**
+- `firestore.rules` — 통합 Security Rules (spec/*/data.md 종합, D-12-01~13 반영)
+- `firestore.indexes.json` — 12개 복합 인덱스 (Phase 2 신규 컬렉션 포함)
+- `storage.rules` — 영상/썸네일/프로필 사진 보안 규칙
+- `firebase.json` — Firebase CLI 통합 설정 (emulators + hosting rewrites)
+- `eas.json` — EAS Build 프로파일 (development / preview / production)
+- `app.json.template` — Expo 앱 설정 템플릿 (Bundle ID, 권한, 플러그인)
+- `.env.example` — 환경 변수 템플릿 (dev/prod 분리)
+- `README.md` — 배포 흐름 + 보안 주의사항
+
+**법무 초안 (`legal-drafts/`)**
+- `tos-v1.md` — 이용약관 19조 (KISA / 정보통신망법 기반)
+  * 만 14세 가입 / 7일 영상 보존 / 90일 채팅 보존 / 신고 정책 반영
+- `privacy-v1.md` — 개인정보처리방침 15조 (개인정보보호법 / GDPR 일부)
+  * 수집 항목 / 보유 기간 / 위탁 / 국외 이전 / 권리 / 안전성 조치 / 미성년자 보호
+- `README.md` — placeholder 채우기 가이드 + 호스팅 흐름
+
+### 사용자가 직접 해야 할 작업 (체크리스트)
+
+**스토어 / 인증**
+- Apple Developer Program 가입 ($99/년)
+- Google Play Console 등록 ($25 1회)
+- APNs .p8 인증 키 발급 + 백업
+
+**Firebase**
+- dev / prod 프로젝트 생성 (서울 리전, Blaze 플랜)
+- App Check 활성화 (DeviceCheck + Play Integrity)
+- Security Rules / Indexes 배포 (`firebase deploy`)
+
+**법무**
+- 회사 정보 placeholder 채우기
+- 변호사 검토
+- DPO 지정
+
+**도메인**
+- chimeme.app 구매 + DNS 설정
+- .well-known/apple-app-site-association + assetlinks.json 호스팅
+
+### 추정 비용
+- 베타 (~100 사용자): 월 ~$10
+- 5,000 DAU: 월 ~$464 (Storage 다운로드가 지배적, CDN 적용 시 절감)
+
 ## 미해결 / 내일 진행 표시
 
-### Phase 3 사용자 영역 (병렬)
-- Firebase 프로젝트 2개(dev/prod) 생성 + 서울 리전
-- Apple Developer / Google Play 등록
-- 이용약관 / 개인정보처리방침 문서 작성
-- App Check 활성화
+### Phase 3 사용자 영역 (병렬) ✅ 가이드 / 초안 제공 완료
+- ✅ `docs/2026-05-12/phase3-setup-guide.md` 가이드 작성
+- ✅ `infra/*` 자동 배포 설정 파일 작성
+- ✅ `legal-drafts/*` 법무 초안 작성
+- ⏳ 사용자가 직접 수행 (계정 가입, 결제, 검토 등)
 
 ### Phase 4 (Phase 1~3 완료 후)
 - Expo 프로젝트 스캐폴딩
